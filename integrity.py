@@ -1,28 +1,33 @@
 from hashlib import sha256
+import base64
 import pyotp
 import time
 
+delimiter = "******"
 
-# client and server needs to have their own copy of the secret
-# base32secret = pyotp.random_base32()
-# alternative specify own secret
-base32secret = 'S3K3TPI5MYA2M67V'
-string_integrity = 'I am a string that needs integrity'
-# instanciate totp
-totp = pyotp.TOTP(base32secret)
-# combine string and otp for hashing
-to_integrity = string_integrity + totp.now()
+# client-side
+data = 'I am a string that needs integrity'
 
+# Generate the OTP and sha256 of the data
+OTP = int(pyotp.random_hex(),16)
+sha256_result = int(sha256(data.encode('utf-8')).hexdigest(),16)
 
+# XOR the OTP and the sha256_result, append the delimiter and the OTP to the back 
+integrityResult = str(sha256_result ^ OTP)
+data_msg = integrityResult + delimiter + str(OTP)
 
-# test the hash
-print(sha256(to_integrity.encode('utf-8')).hexdigest())
-
+# Server-side
 
 #verification process
-otp_val = totp.now()
-# concatenate the decrypted string msg with otp value
-msg_received = string_integrity + otp_val
-# then sha256 it
-print(sha256(msg_received.encode('utf-8')).hexdigest())
+
+# Split the data according to the delimiter
+dataSplit = data_msg.split(delimiter)
+integrityResult = int(dataSplit[0])
+OTP = int(dataSplit[1])
+
+# XOR the result to get back the hash
+to_be_verified = integrityResult ^ OTP
+
+# Verify
+print(to_be_verified==sha256_result)
 
