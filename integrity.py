@@ -7,14 +7,8 @@ delimiter = "******"
 
 def generateIntegrity(data):
 
-    # Generate the OTP and sha256 of the data
-    OTP = int(pyotp.random_hex(),16)
     sha256_result = int(sha256(data.encode('utf-8')).hexdigest(),16)
-
-    # XOR the OTP and the sha256_result, append the delimiter and the OTP to the back 
-    integrityResult = str(sha256_result ^ OTP)
-    data_msg = integrityResult + delimiter + str(OTP)
-    return data_msg
+    return str(sha256_result)
 
 # Server-side
 
@@ -22,23 +16,16 @@ def generateIntegrity(data):
 
 def verifyIntegrity(data,msg):
 
-    # Split the data according to the delimiter
-    dataSplit = data.split(delimiter)
-    integrityResult = int(dataSplit[0])
-    OTP = int(dataSplit[1])
-
     # Generate the hash of the data
-    sha256_result = int(sha256(msg.encode('utf-8')).hexdigest(),16)
-
-    # XOR the result to get back the hash
-    to_be_verified = integrityResult ^ OTP
+    sha256_result = int(sha256(data.encode('utf-8')).hexdigest(),16)
+    print (sha256_result)
 
     # Verify
-    checkResult = to_be_verified == sha256_result
+    checkResult =  str(sha256_result) == msg
 
     return checkResult
 
 data = "Hi i am justin"
-data_msg = generateIntegrity(data)
-check = verifyIntegrity(data_msg,data)
+msg = generateIntegrity(data)
+check = verifyIntegrity(data,msg)
 print (check)
